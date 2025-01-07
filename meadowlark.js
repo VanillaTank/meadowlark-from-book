@@ -14,7 +14,8 @@ app.get('/', (req, res) => {
 })
 
 app.get('/about', (req, res) => {
-  res.render('about')
+  const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)]
+  res.render('about', { fortune: randomFortune })
 })
 
 // 404
@@ -33,3 +34,11 @@ app.use((err, req, res, next) => {
 app.listen(app.get('port'), () => {
   console.log(`Сервер запущен на http://localhost:${app.get('port')}`)
 })
+
+const fortunes = [
+  'Завтра будет солнечный день.',
+  'Тебя ждёт приятный сюрприз.',
+  'Ты скоро встретишь старого друга.',
+  'Тебе подарят цветы.',
+  'Сегодня вечером ты будешь счастлив.',
+]
