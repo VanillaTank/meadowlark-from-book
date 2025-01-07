@@ -1,32 +1,31 @@
 const express = require('express')
 
 const app = express()
+const handlebars = require('express-handlebars').create({defaultLayout: 'main'})
+app.engine('handlebars', handlebars.engine)
+app.set('view engine', 'handlebars')
 
 app.set('port', process.env.PORT || 3000)
 
 app.get('/', (req, res) => {
-  res.type('text/plain')
-  res.send('Meadowlark Travel')
+  res.render('home')
 })
 
 app.get('/about', (req, res) => {
-  res.type('text/plain')
-  res.send('O Meadowlark Travel')
+  res.render('about')
 })
 
 // 404
 app.use((req, res) => {
-  res.type('text/plain')
   res.status(404)
-  res.send('404 - не найдено')
+  res.render('404')
 })
 
 // 500
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.type('text/plain')
   res.status(500)
-  res.send('500 - ошибка сервера')
+  res.render('500')
 })
 
 app.listen(app.get('port'), () => {
