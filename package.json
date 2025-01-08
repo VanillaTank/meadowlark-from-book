@@ -3,11 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "meadowlark.js",
-  "scripts": {},
+  "scripts": {
+    "start": "nodemon meadowlark.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
     "express-handlebars": "^8.0.1"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "mocha": "^11.0.1",
+    "nodemon": "^3.1.9"
   }
 }

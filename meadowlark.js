@@ -1,3 +1,5 @@
+// https://github.com/EthanRBrown/web-development-with-node-and-express
+
 const express = require('express')
 
 const app = express()
@@ -8,6 +10,12 @@ app.set('view engine', 'handlebars')
 app.set('port', process.env.PORT || 3000)
 
 app.use(express.static(__dirname + '/public'))
+
+// Тесты выводятся, если в урле есть ?test=1. Например: http://localhost:3000/about/?test=1
+app.use((req, res, next) => {
+  res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1'
+  next()
+})
 
 app.get('/', (req, res) => {
   res.render('home')
