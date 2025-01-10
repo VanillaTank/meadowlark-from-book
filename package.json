@@ -4,17 +4,19 @@
   "description": "",
   "main": "meadowlark.js",
   "scripts": {
-    "start": "nodemon meadowlark.js"
+    "start": "nodemon meadowlark.js -e js,handlebars",
+    "test": "mocha -u tdd --timeout 5000 --exit -R spec qa/tests-crosspage.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
-    "express-handlebars": "^8.0.1"
+    "express-handlebars": "^8.0.1",
+    "puppeteer": "^24.0.0"
   },
   "devDependencies": {
-    "chai": "^5.1.2",
-    "mocha": "^11.0.1",
+    "chai": "~1.9.1",
+    "mocha": "~1.20.1",
     "nodemon": "^3.1.9"
   }
 }
