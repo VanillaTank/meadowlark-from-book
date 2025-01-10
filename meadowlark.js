@@ -1,6 +1,7 @@
 // https://github.com/EthanRBrown/web-development-with-node-and-express
 
 const express = require('express')
+const fortune = require('./lib/fortune')
 
 const app = express()
 
@@ -45,8 +46,7 @@ app.get('/tours/hood-river', (req, res) => {
 })
 
 app.get('/about', (req, res) => {
-  const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)]
-  res.render('about', { fortune: randomFortune, pageTestScript: '/qa/tests-about.js' })
+  res.render('about', { fortune: fortune.getFortune(), pageTestScript: '/qa/tests-about.js' })
 })
 
 // 404
@@ -65,11 +65,3 @@ app.use((err, req, res, next) => {
 app.listen(app.get('port'), () => {
   console.log(`Сервер запущен на http://localhost:${app.get('port')}`)
 })
-
-const fortunes = [
-  'Завтра будет солнечный день.',
-  'Тебя ждёт приятный сюрприз.',
-  'Ты скоро встретишь старого друга.',
-  'Тебе подарят цветы.',
-  'Сегодня вечером ты будешь счастлив.',
-]
