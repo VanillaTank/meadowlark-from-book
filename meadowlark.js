@@ -29,6 +29,14 @@ app.use((req, res, next) => {
   next()
 })
 
+app.use((req, res, next) => {
+  if (!res.locals.partials) {
+    res.locals.partials = {}
+  }
+  res.locals.partials.weatherContext = getWeatherData()
+  next()
+})
+
 app.get('/', (req, res) => {
   res.render('home')
 })
@@ -65,3 +73,33 @@ app.use((err, req, res, next) => {
 app.listen(app.get('port'), () => {
   console.log(`Сервер запущен на http://localhost:${app.get('port')}`)
 })
+
+
+
+function getWeatherData () {
+  return {
+    locations: [
+      {
+        name: 'Portland',
+        forecastUrl: 'http://www.wunderground.com/US/OR/Portland.html',
+        iconUrl: '/img/cloudy.gif',
+        weather: 'Overcast',
+        temp: '54.1 F (12.3 C)',
+      },
+      {
+        name: 'Bend',
+        forecastUrl: 'http://www.wunderground.com/US/OR/Bend.html',
+        iconUrl: '/img/partlycloudy.gif',
+        weather: 'Partly Cloudy',
+        temp: '55.0 F (12.8 C)',
+      },
+      {
+        name: 'Manzanita',
+        forecastUrl: 'http://www.wunderground.com/US/OR/Manzanita.html',
+        iconUrl: '/img/rain.gif',
+        weather: 'Light Rain',
+        temp: '55.0 F (12.8 C)',
+      },
+    ],
+  }
+}

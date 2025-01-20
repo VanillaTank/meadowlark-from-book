@@ -1,0 +1,13 @@
+<div class="weatherWidget">
+    {{! область видимости контекста начинается с partials.weatherContext, чтобы применять частичный шаблон на люой странице  }}
+    {{#each partials.weatherContext.locations}}
+        <div class="location">
+            <h3>{{name}}</h3>
+            <a href="{{forecastUrl}}">
+                <img src="{{iconUrl}}" alt="{{weather}}" width="250">
+                {{weather}}. {{temp}}
+            </a>
+        </div>
+    {{/each}}
+    <small>Источник: <a href="http://wunderground.com">Weather underground</a></small>
+</div>
