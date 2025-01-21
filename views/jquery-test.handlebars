@@ -1,0 +1,16 @@
+{{! используется для включения чего-либо в head и сценарий, использующий jquery }}
+{{#section 'head'}}
+    <!--  Мы хотим, чтобы гугл игнорировал эту страничку  -->
+    <meta name="robots" content="noindex">
+{{/section}}
+
+<h1>Тестовая страница</h1>
+<p>Тестируем что-то, связанное с jquery</p>
+
+{{#section 'jquery'}}
+    <script>
+        $('document').ready(() => {
+          $('h1').html('Jquery работает')
+        })
+    </script>
+{{/section}}

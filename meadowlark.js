@@ -53,6 +53,10 @@ app.get('/tours/hood-river', (req, res) => {
   res.render('tours/hood-river')
 })
 
+app.get('/jquery-test', function(req, res){
+  res.render('jquery-test')
+});
+
 app.get('/about', (req, res) => {
   res.render('about', { fortune: fortune.getFortune(), pageTestScript: '/qa/tests-about.js' })
 })
