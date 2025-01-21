@@ -61,6 +61,19 @@ app.get('/about', (req, res) => {
   res.render('about', { fortune: fortune.getFortune(), pageTestScript: '/qa/tests-about.js' })
 })
 
+app.get('/nursery-rhyme', (req, res)  => {
+  res.render('nursery-rhyme')
+})
+
+app.get('/data/nursery-rhyme', (req, res) => {
+  res.json({
+    animal: 'бельчонок',
+    bodyPart: 'хвост',
+    adjective: 'пушистый',
+    noun: 'черт'
+  })
+})
+
 // 404
 app.use((req, res) => {
   res.status(404)
