@@ -3,6 +3,7 @@
 const express = require('express')
 const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
+const formidable = require('formidable')
 
 const app = express()
 
@@ -104,6 +105,26 @@ app.post('/process', (req, res) => {
 
 app.get('/thank-you', (req, res) => {
   res.render('thank-you')
+})
+
+app.get('/contest/vacation-photo', (req, res) => {
+  const now = new Date()
+  res.render('contest/vacation-photo', { year: now.getFullYear(), month: now.getMonth() })
+})
+
+app.post('/contest/vacation-photo/:year/:month', (req, res) => {
+  const form = new formidable.IncomingForm()
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      return res.redirect(303, '/error')
+    }
+    console.log('received fields:')
+    console.log(fields)
+    console.log('received files:')
+    console.log(files)
+    // дальше с файлом можно делать то, что нам нужно - сохранить в облако например
+    res.redirect(303, '/thank-you')
+  })
 })
 
 // 404
