@@ -83,13 +83,23 @@ app.get('/newsletter', (req, res) => {
 })
 
 app.post('/process', (req, res) => {
-  console.log('Form (from querystring): ' + req.query.form)
-  console.log('CSFR token (from hidden form field): ' + req.body._csrf)
-  console.log('Name (from visible form field): ' + req.body.name)
-  console.log('Email (from visible form field): ' + req.body.email)
-  // важно использовать 303 или 302, а не 301, так как 301 - постоянное перенаправление и браузер может его кешировать
-  // вместо перенаправления (обработчик /process будет проигнорирован и юзер попадет сразу на /thank-you)
-  res.redirect(303, '/thank-you')
+  // req.accepts('json.html') === 'json' смотрит, какой ответ предпочтительно отправить в зависимости от заголовка Accepts от браузера
+  if (req.xhr || req.accepts('json.html') === 'json') {
+    res.send({ success: true })
+    // если бы тут произошла ошибка (например, отвалилась запись в базу), то
+    // мы должны отправить { error: "описание ошибки" }
+  } else {
+    console.log('Form (from querystring): ' + req.query.form)
+    console.log('CSFR token (from hidden form field): ' + req.body._csrf)
+    console.log('Name (from visible form field): ' + req.body.name)
+    console.log('Email (from visible form field): ' + req.body.email)
+    // важно использовать 303 или 302, а не 301, так как 301 - постоянное перенаправление и браузер может его кешировать
+    // вместо перенаправления (обработчик /process будет проигнорирован и юзер попадет сразу на /thank-you)
+    res.redirect(303, '/thank-you')
+
+    // если бы тут произошла ошибка (например, отвалилась запись в базу), то
+    // мы должны перенаправить на страницу ошибки
+  }
 })
 
 app.get('/thank-you', (req, res) => {

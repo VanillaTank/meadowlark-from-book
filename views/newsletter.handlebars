@@ -1,7 +1,7 @@
 <div class="formContainer">
     <h2>Подпишитесь на нашу рассылку для получения новостей и специальных предложений!</h2>
     <form
-            class="form-horizontal"
+            class="form-horizontal newsletterForm"
             role="form"
             action="/process?form=newsletter"
             method="POST"
@@ -31,3 +31,31 @@
         </div>
     </form>
 </div>
+
+{{#section 'jquery'}}
+    <script>
+        $(document).ready(() => {
+          $('.newsletterForm').on('submit', function (evt) {
+            evt.preventDefault()
+            const action = $(this).attr('action')
+            const $container =$(this).closest('.formContainer')
+
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (data) {
+                  if (data.success) {
+                    $container.html('<h2>Спасибо!</h2>')
+                  } else {
+                    $container.html('Возникла проблема')
+                  }
+                },
+                error: function () {
+                    $container.html('Возникла проблема')
+                }
+            })
+          })
+        })
+    </script>
+{{/section}}
