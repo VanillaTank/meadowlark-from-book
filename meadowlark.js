@@ -2,6 +2,7 @@
 
 const express = require('express')
 const fortune = require('./lib/fortune')
+const bodyParser = require('body-parser')
 
 const app = express()
 
@@ -22,6 +23,9 @@ app.set('view engine', 'handlebars')
 app.set('port', process.env.PORT || 3000)
 
 app.use(express.static(__dirname + '/public'))
+
+// делает доступным req.body
+app.use(bodyParser.urlencoded({ extended: false }))
 
 // Тесты выводятся, если в урле есть ?test=1. Например: http://localhost:3000/about/?test=1
 app.use((req, res, next) => {
@@ -72,6 +76,24 @@ app.get('/data/nursery-rhyme', (req, res) => {
     adjective: 'пушистый',
     noun: 'черт'
   })
+})
+
+app.get('/newsletter', (req, res) => {
+  res.render('newsletter', { csrf: 'CSRF token goes here' });
+})
+
+app.post('/process', (req, res) => {
+  console.log('Form (from querystring): ' + req.query.form)
+  console.log('CSFR token (from hidden form field): ' + req.body.csrf)
+  console.log('Name (from visible form field): ' + req.body.name)
+  console.log('Email (from visible form field): ' + req.body.email)
+  // важно использовать 303 или 302, а не 301, так как 301 - постоянное перенаправление и браузер может его кешировать
+  // вместо перенаправления (обработчик /process будет проигнорирован и юзер попадет сразу на /thank-you)
+  res.redirect(303, '/thank-you')
+})
+
+app.get('/thank-you', (req, res) => {
+  res.render('thank-you')
 })
 
 // 404
