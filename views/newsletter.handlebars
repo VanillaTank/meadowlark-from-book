@@ -3,7 +3,7 @@
     <form
             class="form-horizontal newsletterForm"
             role="form"
-            action="/process?form=newsletter"
+            action="/newsletter"
             method="POST"
     >
         <input type="hidden" name="_csrf" value="{{csrf}}">
@@ -33,6 +33,7 @@
 </div>
 
 {{#section 'jquery'}}
+<!--  Если нужно, чтобы отправка была без ajax, этот скрипт надо комментировать  -->
     <script>
         $(document).ready(() => {
           $('.newsletterForm').on('submit', function (evt) {

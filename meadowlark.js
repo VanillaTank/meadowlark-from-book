@@ -53,6 +53,13 @@ app.use(require('express-session')({
   secret: cookieSecret,
 }))
 
+app.use(function (req, res, next) {
+  // если есть алерт, поместим его в контекст, а потом удалим
+  res.locals.flash = req.session.flash || ''
+  delete req.session.flash
+  next()
+})
+
 app.get('/', (req, res) => {
 
   // подписанные куки имеют приоритет над неподписанными.
@@ -109,6 +116,64 @@ app.get('/data/nursery-rhyme', (req, res) => {
 app.get('/newsletter', (req, res) => {
   res.render('newsletter', { csrf: 'CSRF token goes here' });
 })
+
+app.get('/newsletter/archive', function(req, res) {
+  res.render('newsletter/archive');
+});
+
+app.post('/newsletter', (req, res) => {
+  const name = req.body.name || ''
+  const email = req.body.email || ''
+  const VALID_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
+
+  if (!email.match(VALID_EMAIL_REGEX)) {
+    if (req.xhr) {
+      return res.json({ error: 'Некорректный адрес электронной почты' })
+    }
+    req.session.flash = {
+      type: 'danger',
+      intro: 'Ошибка проверки!',
+      message: 'Введенный вами адрес электронной почты не корректный'
+    }
+    return res.redirect(303, '/newsletter/archive')
+  }
+
+  function NewslatterSignUp() { }
+  NewslatterSignUp.prototype.save = function (cb) {
+    cb();
+  };
+
+  new NewslatterSignUp({ name: name, email: email }).save(function(err) {
+    if(err) {
+      if(req.xhr) {
+        return res.json({
+          error: 'Database error.'
+        });
+      }
+
+      req.session.flash = {
+        type: 'danger',
+        intro: 'Database error!',
+        message: 'There was a database error; please try again later.',
+      };
+
+      return res.redirect(303, '/newsletter/archive');
+    }
+
+    if(req.xhr) {
+      return res.json({ success: true });
+    }
+
+    req.session.flash = {
+      type: 'success',
+      intro: 'Thank you!',
+      message: 'You have now been signed up for the newsletter.',
+    };
+
+    return res.redirect(303, '/newsletter/archive');
+  })
+})
+
 
 app.post('/process', (req, res) => {
   // req.accepts('json.html') === 'json' смотрит, какой ответ предпочтительно отправить в зависимости от заголовка Accepts от браузера
