@@ -4,6 +4,7 @@ const express = require('express')
 const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
 const formidable = require('formidable')
+const {cookieSecret} = require("./credentials");
 
 const app = express()
 
@@ -42,7 +43,33 @@ app.use((req, res, next) => {
   next()
 })
 
+// позволяет устанавливать подписанные и нет cookie-файлы в res
+app.use(require('cookie-parser')(cookieSecret))
+
+// хранение сеанса в рантайме
+app.use(require('express-session')({
+  resave: false,
+  saveUninitialized: false,
+  secret: cookieSecret,
+}))
+
 app.get('/', (req, res) => {
+
+  // подписанные куки имеют приоритет над неподписанными.
+  // Если назвать подписанный куки signed_monster, у вас не может быть неподписанного с таким же названием (вернется undefined)
+  res.cookie('monster', 'nom nom')
+  res.cookie('signed_monster', 'nom nom nom', { signed: true })
+
+  // чтобы извлечь значение куки, если оно есть
+  // const monster = req.cookies.monster
+  // const signed_monster = req.cookies.signed_monster
+
+  req.session.username = 'Anonim'
+  const colorSchema = req.session.colorSchema || 'dark'
+
+  // чтобы удалить сеанс
+  // delete req.session.colorSchema
+
   res.render('home')
 })
 
