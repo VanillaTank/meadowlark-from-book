@@ -5,6 +5,7 @@ const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
 const formidable = require('formidable')
 const {cookieSecret} = require("./credentials");
+const {checkWaivers, checkGuestCounts} = require("./lib/cardValidation");
 
 const app = express()
 
@@ -26,7 +27,7 @@ app.set('port', process.env.PORT || 3000)
 
 app.use(express.static(__dirname + '/public'))
 
-// делает доступным req.body
+// bodyParser - промежуточное ПО. делает доступным req.body
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // Тесты выводятся, если в урле есть ?test=1. Например: http://localhost:3000/about/?test=1
@@ -218,6 +219,11 @@ app.post('/contest/vacation-photo/:year/:month', (req, res) => {
     res.redirect(303, '/thank-you')
   })
 })
+
+app.use(checkWaivers)
+app.use(checkGuestCounts)
+// тут должны быть роуты, обрабатывающие /cart, но в книге про них не написано
+// см. https://github.com/EthanRBrown/web-development-with-node-and-express/blob/master/ch10/meadowlark.js
 
 // 404
 app.use((req, res) => {
