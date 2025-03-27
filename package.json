@@ -5,6 +5,7 @@
   "main": "meadowlark.js",
   "scripts": {
     "start": "nodemon meadowlark.js -e js,handlebars",
+    "start:cluster": "node meadowlark_cluster.js",
     "start:prod": "set NODE_ENV=production && node meadowlark.js",
     "start:test": "set NODE_ENV=test && node meadowlark.js",
     "test": "mocha -u tdd --timeout 5000 --exit -R spec qa/tests-crosspage.js"

@@ -74,6 +74,14 @@ app.use(function (req, res, next) {
   next()
 })
 
+app.use((req, res, next) => {
+  const cluster = require('cluster')
+  if (cluster.isWorker) {
+    console.log('Воркер %d получил запрос', cluster.worker.id)
+  }
+  next()
+})
+
 app.get('/', (req, res) => {
 
   // подписанные куки имеют приоритет над неподписанными.
@@ -188,7 +196,6 @@ app.post('/newsletter', (req, res) => {
   })
 })
 
-
 app.post('/process', (req, res) => {
   // req.accepts('json.html') === 'json' смотрит, какой ответ предпочтительно отправить в зависимости от заголовка Accepts от браузера
   if (req.xhr || req.accepts('json.html') === 'json') {
@@ -251,9 +258,20 @@ app.use((err, req, res, next) => {
   res.render('500')
 })
 
-app.listen(app.get('port'), () => {
-  console.log(`Сервер запущен на http://localhost:${app.get('port')}`)
-})
+
+function startServer () {
+  app.listen(app.get('port'), () => {
+    console.log(`Сервер запущен в среде выполнения ${app.get('env')} на http://localhost:${app.get('port')}`)
+  })
+}
+
+if (require.main === module) {
+  // приложение запускается непосредственно, запускаем сервер
+  startServer()
+} else {
+  // приложение импортируется как модуль посредством require - экспортируем функцию для создания сервера
+  module.exports = startServer
+}
 
 
 
