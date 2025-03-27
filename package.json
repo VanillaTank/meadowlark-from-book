@@ -5,6 +5,8 @@
   "main": "meadowlark.js",
   "scripts": {
     "start": "nodemon meadowlark.js -e js,handlebars",
+    "start:prod": "set NODE_ENV=production && node meadowlark.js",
+    "start:test": "set NODE_ENV=test && node meadowlark.js",
     "test": "mocha -u tdd --timeout 5000 --exit -R spec qa/tests-crosspage.js"
   },
   "author": "",
@@ -14,8 +16,10 @@
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
     "express-handlebars": "^8.0.1",
+    "express-logger": "^0.0.3",
     "express-session": "^1.18.1",
     "formidable": "^3.5.2",
+    "morgan": "^1.1.1",
     "puppeteer": "^24.0.0"
   },
   "devDependencies": {
