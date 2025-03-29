@@ -1,6 +1,7 @@
 // https://github.com/EthanRBrown/web-development-with-node-and-express
 
 const express = require('express')
+const http = require('http')
 const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
 const formidable = require('formidable')
@@ -8,6 +9,8 @@ const {cookieSecret} = require("./credentials");
 const {checkWaivers, checkGuestCounts} = require("./lib/cardValidation");
 
 const app = express()
+
+let server
 
 const handlebars = require('express-handlebars').create({
   defaultLayout:'main',
@@ -24,6 +27,52 @@ app.engine('handlebars', handlebars.engine)
 app.set('view engine', 'handlebars')
 
 app.set('port', process.env.PORT || 3000)
+
+app.use((req, res, next) => {
+ // создаем домен (типа как контекст) для этого запроса
+ const domain = require('domain').create()
+
+  // если где-то в конвейере произойдет ошибка, мы попадем сюда (но из других промежуточных ПО почему-то не попала(()
+  domain.on('error', err => {
+    console.error('ПЕРЕХВАЧЕНА ОШИБКА ДОМЕНА\n', err.stack)
+
+    try {
+      setTimeout(() => {
+        console.error('Отказобезопасная остановка')
+        process.exit(1)
+      }, 5000)
+
+      // Отключение кластера
+      const worker = require('cluster').worker
+      if (worker) {
+        worker.disconnect()
+      }
+
+      // Прекращение принятия новых запросов
+      server.close()
+
+      // пытаемся сообщить на клиент об ошибке
+      try {
+        // attempt to use Express error route
+        next(err);
+      } catch(error){
+        // if Express error route failed, try plain Node response
+        console.error('Express error mechanism failed.\n', error.stack);
+        res.statusCode = 500;
+        res.setHeader('content-type', 'text/plain');
+        res.end('Server error.');
+      }
+    } catch (err) {
+      console.error('Не могу отправить ответ 500\n', err.stack)
+    }
+  })
+
+  domain.add(req)
+  domain.add(res)
+
+  // выполняем оставшуюся часть цепочки запроса в домене
+  domain.run(next)
+})
 
 app.use(express.static(__dirname + '/public'))
 
@@ -245,6 +294,17 @@ app.use(checkGuestCounts)
 // тут должны быть роуты, обрабатывающие /cart, но в книге про них не написано
 // см. https://github.com/EthanRBrown/web-development-with-node-and-express/blob/master/ch10/meadowlark.js
 
+
+app.get('/fail', (req, res) => {
+  throw new Error('Нет!')
+})
+
+app.get('/epic-fail', (req, res) => {
+  process.nextTick(function () {
+    throw new Error('Бабах!')
+  })
+})
+
 // 404
 app.use((req, res) => {
   res.status(404)
@@ -254,13 +314,11 @@ app.use((req, res) => {
 // 500
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.status(500)
-  res.render('500')
+  res.status(500).render('500')
 })
 
-
 function startServer () {
-  app.listen(app.get('port'), () => {
+  server = http.createServer(app).listen(app.get('port'), function(){
     console.log(`Сервер запущен в среде выполнения ${app.get('env')} на http://localhost:${app.get('port')}`)
   })
 }
