@@ -12,6 +12,7 @@ const connectDB = require('./db/index')
 const { Vacation, setMockVacations} = require('./db/models/vacation')
 const VacationInSeasonListener = require("./db/models/vacationInSeasonListener")
 const MongoStore = require('connect-mongo');
+const vhost = require("vhost")
 
 const app = express()
 
@@ -20,6 +21,21 @@ connectDB(app.get('env'))
     setMockVacations()
   })
 
+// Механизм маршрутизации Express по умолчанию не понимает поддомены, нужна либа vhost
+// создаем поддомен admin до всех остальных маршрутов
+const admin = express.Router()
+app.use(vhost('admin.*', admin))
+
+// создаем маршруты для admin в любом месте
+// http://admin.localhost:3000/
+admin.get('/', (req, res) => {
+  return res.render('admin/home')
+})
+
+// http://admin.localhost:3000/users
+admin.get('/users', (req, res) => {
+  return res.render('admin/users')
+})
 
 let server
 
