@@ -5,10 +5,19 @@ const http = require('http')
 const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
 const formidable = require('formidable')
-const {cookieSecret} = require("./credentials");
-const {checkWaivers, checkGuestCounts} = require("./lib/cardValidation");
+const {cookieSecret} = require("./credentials")
+const {checkWaivers, checkGuestCounts} = require("./lib/cardValidation")
+const fs = require('fs')
+const connectDB = require('./db/index')
+const { Vacation, setMockVacations} = require('./db/models/vacation')
+const VacationInSeasonListener = require("./db/models/vacationInSeasonListener");
 
 const app = express()
+
+connectDB(app.get('env'))
+  .then(() => {
+    setMockVacations()
+  })
 
 let server
 
@@ -274,18 +283,43 @@ app.get('/contest/vacation-photo', (req, res) => {
   res.render('contest/vacation-photo', { year: now.getFullYear(), month: now.getMonth() })
 })
 
+const dataDir = __dirname + '/data'
+const vacationPhotoDir = dataDir  + '/vacation-photo'
+fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
+fs.existsSync(vacationPhotoDir) || fs.mkdirSync(vacationPhotoDir)
+
+
+function saveContextEntry (contestName, email, year, month, photoPath) {
+  // todo
+}
+
 app.post('/contest/vacation-photo/:year/:month', (req, res) => {
   const form = new formidable.IncomingForm()
   form.parse(req, (err, fields, files) => {
     if (err) {
-      return res.redirect(303, '/error')
+      res.session.flash = {
+        type: 'danger',
+        intro: 'Упс!',
+        message: 'Во время обработки формы произошла ошибка. Пожалуйста, попробуйте еще раз'
+      }
+      return res.redirect(303, '/contest/vacation-photo')
     }
-    console.log('received fields:')
-    console.log(fields)
-    console.log('received files:')
-    console.log(files)
-    // дальше с файлом можно делать то, что нам нужно - сохранить в облако например
-    res.redirect(303, '/thank-you')
+    const photo = files.photo
+    const dir = `${vacationPhotoDir}/${Date.now()}`
+    fs.mkdirSync(dir)
+    fs.renameSync(photo.path, `${dir}/${photo.name}`)
+    /* Использовать photo.name - плохая практика, так как могут заслать вредоносный exe.
+    * Лучше дать файлу случайное имя, оставить только расширение, проверив, что оно состоит из алфавитно-цифровых символов */
+    const path = `${dir}/${photo.name}`
+    saveContextEntry('vacation-photo', fields.email, req.params.year, req.params.month, path)
+
+    req.session.flash = {
+      type: 'success',
+      intro: 'Удачи!',
+      message: 'Вы стали участником конкурса'
+    }
+
+    res.redirect(303, '/contest/vacation-photo/entries')
   })
 })
 
@@ -303,6 +337,62 @@ app.get('/epic-fail', (req, res) => {
   process.nextTick(function () {
     throw new Error('Бабах!')
   })
+})
+
+app.get('/vacations', function(req, res){
+  Vacation.find({ available: true })
+    .then((vacations) => {
+      const currency = req.session.currency || 'USD';
+      const context = {
+        currency: currency,
+        vacations: vacations.map(function(vacation){
+          return {
+            sku: vacation.sku,
+            name: vacation.name,
+            description: vacation.description,
+            inSeason: vacation.inSeason,
+            price: vacation.getDisplayPrice(), // convertFromUSD(vacation.priceInCents/100, currency),
+            qty: vacation.qty,
+          };
+        })
+      }
+
+      switch(currency){
+        case 'USD': context.currencyUSD = 'selected'; break;
+        case 'GBP': context.currencyGBP = 'selected'; break;
+        case 'BTC': context.currencyBTC = 'selected'; break;
+      }
+
+      res.render('vacations', context);
+    })
+});
+
+app.get('/notify-me-when-in-season', (req, res) => {
+  res.render('notify-me-when-in-season', { sku: req.query.sku })
+})
+
+app.post('/notify-me-when-in-season', (req, res) => {
+  VacationInSeasonListener.updateOne(
+    { email: req.body.email },
+    { $push: { skus: req.body.sku } },
+    { upsert: true }
+    ).then(() => {
+      req.session.flash = {
+        type: 'success',
+        intro: 'Спасибо!',
+        message: 'Вы будете оповещены, когда наступит сезон для этого тура'
+      }
+      res.redirect(303, '/vacations')
+  })
+    .catch(err => {
+      console.error(err.stack)
+      req.session.flash = {
+        type: 'danger',
+        intro: 'Упс!',
+        message: 'При обработке вашего запроса произошла ошибка'
+      }
+      res.redirect(303, '/vacations')
+    })
 })
 
 // 404
