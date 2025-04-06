@@ -5,12 +5,13 @@ const http = require('http')
 const fortune = require('./lib/fortune')
 const bodyParser = require('body-parser')
 const formidable = require('formidable')
-const {cookieSecret} = require("./credentials")
+const {cookieSecret, mongo} = require("./credentials")
 const {checkWaivers, checkGuestCounts} = require("./lib/cardValidation")
 const fs = require('fs')
 const connectDB = require('./db/index')
 const { Vacation, setMockVacations} = require('./db/models/vacation')
-const VacationInSeasonListener = require("./db/models/vacationInSeasonListener");
+const VacationInSeasonListener = require("./db/models/vacationInSeasonListener")
+const MongoStore = require('connect-mongo');
 
 const app = express()
 
@@ -18,6 +19,7 @@ connectDB(app.get('env'))
   .then(() => {
     setMockVacations()
   })
+
 
 let server
 
@@ -123,6 +125,10 @@ app.use(require('express-session')({
   resave: false,
   saveUninitialized: false,
   secret: cookieSecret,
+  store: MongoStore.create({
+    mongoUrl: mongo[app.get('env')].connectionString,
+    ttl: 14 * 24 * 60 * 60 // Время жизни сессии в секундах
+  })
 }))
 
 app.use(function (req, res, next) {
@@ -339,7 +345,17 @@ app.get('/epic-fail', (req, res) => {
   })
 })
 
+function convertFromUSD (value, currency) {
+  switch (currency) {
+    case 'USD': return value * 1;
+    case 'GBP': return value * 0.6;
+    case 'BTC': return value * 0.00238;
+    default: return NaN;
+  }
+}
+
 app.get('/vacations', function(req, res){
+  console.log(req.session.currency)
   Vacation.find({ available: true })
     .then((vacations) => {
       const currency = req.session.currency || 'USD';
@@ -351,7 +367,7 @@ app.get('/vacations', function(req, res){
             name: vacation.name,
             description: vacation.description,
             inSeason: vacation.inSeason,
-            price: vacation.getDisplayPrice(), // convertFromUSD(vacation.priceInCents/100, currency),
+            price: convertFromUSD(vacation.priceInCents/100, currency),
             qty: vacation.qty,
           };
         })
@@ -366,6 +382,11 @@ app.get('/vacations', function(req, res){
       res.render('vacations', context);
     })
 });
+
+app.get('/set-currency/:currency', (req, res) => {
+  req.session.currency = req.params.currency
+  return res.redirect(303, '/vacations')
+})
 
 app.get('/notify-me-when-in-season', (req, res) => {
   res.render('notify-me-when-in-season', { sku: req.query.sku })

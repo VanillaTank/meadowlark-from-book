@@ -10,13 +10,13 @@ module.exports = function connectDB (evn) {
 
   switch(evn) {
     case 'development':
-      return mongoose.connect(mongo.dev.connectionString)
+      return mongoose.connect(mongo.development.connectionString)
         .then(() => {
           console.log('Соединение с базой данный установлено')
         })
       break;
     case 'production':
-      return mongoose.connect(mongo.prod.connectionString)
+      return mongoose.connect(mongo.production.connectionString)
         .then(() => {
           console.log('Соединение с базой данный установлено')
         })
