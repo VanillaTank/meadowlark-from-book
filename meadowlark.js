@@ -182,6 +182,8 @@ app.get('/', (req, res) => {
   res.render('home')
 })
 
+require('./routes.js')(app);
+
 app.get('/tours/request-group-rate', (req, res) => {
   res.render('tours/request-group-rate')
 })
@@ -198,9 +200,9 @@ app.get('/jquery-test', function(req, res){
   res.render('jquery-test')
 });
 
-app.get('/about', (req, res) => {
-  res.render('about', { fortune: fortune.getFortune(), pageTestScript: '/qa/tests-about.js' })
-})
+// app.get('/about', (req, res) => {
+//   res.render('about', { fortune: fortune.getFortune(), pageTestScript: '/qa/tests-about.js' })
+// })
 
 app.get('/nursery-rhyme', (req, res)  => {
   res.render('nursery-rhyme')
