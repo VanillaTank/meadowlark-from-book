@@ -16,6 +16,8 @@ const vhost = require("vhost")
 
 const app = express()
 
+app.use('/api', require('cors')())
+
 connectDB(app.get('env'))
   .then(() => {
     setMockVacations()
@@ -55,6 +57,8 @@ app.set('view engine', 'handlebars')
 
 app.set('port', process.env.PORT || 3000)
 
+// если нужно обрабатывать ошибки и для поддоменов, этот блок должен быть размещен выше их объявления
+// Например, этот обработчик будет работать для api, а для admin - нет
 app.use((req, res, next) => {
  // создаем домен (типа как контекст) для этого запроса
  const domain = require('domain').create()
@@ -100,6 +104,10 @@ app.use((req, res, next) => {
   // выполняем оставшуюся часть цепочки запроса в домене
   domain.run(next)
 })
+
+// Размещаем api на отдельном поддомене http://api.admin.localhost:3000/
+const api = express.Router()
+app.use(vhost('api.*', api))
 
 app.use(express.static(__dirname + '/public'))
 
@@ -183,6 +191,8 @@ app.get('/', (req, res) => {
 })
 
 require('./routes.js')(app);
+// мидлваэ для app будут выполнены и для api
+require('./api.js')(api);
 
 app.get('/tours/request-group-rate', (req, res) => {
   res.render('tours/request-group-rate')

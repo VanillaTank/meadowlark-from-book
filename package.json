@@ -16,6 +16,7 @@
     "body-parser": "^1.20.3",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-handlebars": "^8.0.1",
     "express-logger": "^0.0.3",
